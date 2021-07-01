@@ -14,8 +14,8 @@ import setproctitle
 import numpy as np
 from pathlib import Path
 import torch
-from mappo.config import get_config
-from mappo.envs.env_wrappers import SubprocVecEnv, DummyVecEnv
+from config import get_config
+from .envs.env_wrappers import SubprocVecEnv, DummyVecEnv
 
 """Train script for MPEs."""
 
