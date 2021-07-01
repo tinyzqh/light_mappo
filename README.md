@@ -4,9 +4,23 @@ Lightweight version of MAPPO to help you quickly migrate to your local environme
 
 轻量版MAPPO，帮助你快速移植到本地环境。
 
+
+## Table of Contents
+
+- [背景](#背景)
+
+
+## 背景
+
+
+## 安装
+
+
+## 用法
+
 - 环境部分是一个空的的实现，文件`light_mappo/envs/env_wrappers.py`里面环境部分的实现：[Code](https://github.com/tinyzqh/light_mappo/blob/main/envs/env_wrappers.py)
 
-```
+```python
 class Env(object):
     """
     # 环境中的智能体
@@ -44,4 +58,19 @@ class Env(object):
         return [sub_agent_obs, sub_agent_reward, sub_agent_done, sub_agent_info]
 ```
 
-只需要编写这一部分的代码，就可以无缝衔接MAPPO。初识版本，后期这一部分会单独提出来。
+
+只需要编写这一部分的代码，就可以无缝衔接MAPPO。初始版本，后期这一部分会单独提出来。
+
+
+## Related Efforts
+
+- [on-policy](https://github.com/marlbenchmark/on-policy) - 💌 Learn the author implementation of MAPPO.
+
+## Maintainers
+
+[@tinyzqh](https://github.com/tinyzqh).
+
+## License
+
+[MIT](LICENSE) © tinyzqh
+
