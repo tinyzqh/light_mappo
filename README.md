@@ -8,13 +8,17 @@ Lightweight version of MAPPO to help you quickly migrate to your local environme
 ## Table of Contents
 
 - [背景](#背景)
+- [安装](#安装)
+- [用法](#用法)
 
 
 ## 背景
 
+MAPPO原版代码对于环境的封装过于复杂，本项目直接将环境封装抽取出来。更加方便将MAPPO代码移植到自己的项目上。
 
 ## 安装
 
+直接将代码下载下来，创建一个Conda环境，然后运行代码，缺啥步啥包。具体什么包以后再添加。
 
 ## 用法
 
