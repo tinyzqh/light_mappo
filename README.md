@@ -4,7 +4,7 @@ Lightweight version of MAPPO to help you quickly migrate to your local environme
 
 轻量版MAPPO，帮助你快速移植到本地环境。
 
-- 环境部分是一个空的的实现，里面环境变量的：[Code](https://github.com/tinyzqh/light_mappo/blob/main/envs/env_wrappers.py)
+- 环境部分是一个空的的实现，`light_mappo/envs/env_wrappers.py`里面环境变量的：[Code](https://github.com/tinyzqh/light_mappo/blob/main/envs/env_wrappers.py)
 
 ```
 class Env(object):
