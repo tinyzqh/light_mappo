@@ -6,8 +6,8 @@
 """
 
 import torch
-from mappo.algorithms.algorithm.r_actor_critic import R_Actor, R_Critic
-from mappo.utils.util import update_linear_schedule
+from algorithms.algorithm.r_actor_critic import R_Actor, R_Critic
+from utils.util import update_linear_schedule
 
 
 class RMAPPOPolicy:

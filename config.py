@@ -189,7 +189,7 @@ def get_config():
 
     # network parameters
     parser.add_argument("--share_policy", action='store_false',
-                        default=False, help='Whether agent share the same policy')
+                        default=True, help='Whether agent share the same policy')
     parser.add_argument("--use_centralized_V", action='store_false',
                         default=True, help="Whether to use centralized V function")
     parser.add_argument("--stacked_frames", type=int, default=1,

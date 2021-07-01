@@ -12,8 +12,8 @@ import numpy as np
 from itertools import chain
 import torch
 
-from mappo.utils.util import update_linear_schedule
-from mappo.runner.separated.base_runner import Runner
+from utils.util import update_linear_schedule
+from runner.separated.base_runner import Runner
 import imageio
 
 

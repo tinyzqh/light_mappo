@@ -7,8 +7,8 @@ from itertools import chain
 import torch
 from tensorboardX import SummaryWriter
 
-from mappo.utils.separated_buffer import SeparatedReplayBuffer
-from mappo.utils.util import update_linear_schedule
+from utils.separated_buffer import SeparatedReplayBuffer
+from utils.util import update_linear_schedule
 
 def _t2n(x):
     return x.detach().cpu().numpy()
@@ -67,8 +67,8 @@ class Runner(object):
                     os.makedirs(self.save_dir)
 
 
-        from mappo.algorithms.algorithm.r_mappo import RMAPPO as TrainAlgo
-        from mappo.algorithms.algorithm.rMAPPOPolicy import RMAPPOPolicy as Policy
+        from algorithms.algorithm.r_mappo import RMAPPO as TrainAlgo
+        from algorithms.algorithm.rMAPPOPolicy import RMAPPOPolicy as Policy
 
 
         self.policy = []

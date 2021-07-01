@@ -15,7 +15,7 @@
 import time
 import numpy as np
 import torch
-from mappo.runner.shared.base_runner import Runner
+from runner.shared.base_runner import Runner
 import wandb
 import imageio
 

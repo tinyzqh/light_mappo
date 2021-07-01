@@ -1,4 +1,4 @@
-from mappo import algorithms, envs, runner, scripts, utils, config
+from . import algorithms, envs, runner, scripts, utils, config
 
 
 __version__ = "0.1.0"

@@ -7,13 +7,13 @@
 
 import torch
 import torch.nn as nn
-from mappo.algorithms.utils.util import init, check
-from mappo.algorithms.utils.cnn import CNNBase
-from mappo.algorithms.utils.mlp import MLPBase
-from mappo.algorithms.utils.rnn import RNNLayer
-from mappo.algorithms.utils.act import ACTLayer
-from mappo.algorithms.utils.popart import PopArt
-from mappo.utils.util import get_shape_from_obs_space
+from algorithms.utils.util import init, check
+from algorithms.utils.cnn import CNNBase
+from algorithms.utils.mlp import MLPBase
+from algorithms.utils.rnn import RNNLayer
+from algorithms.utils.act import ACTLayer
+from algorithms.utils.popart import PopArt
+from utils.util import get_shape_from_obs_space
 
 
 class R_Actor(nn.Module):

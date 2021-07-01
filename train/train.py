@@ -15,7 +15,7 @@ import numpy as np
 from pathlib import Path
 import torch
 from config import get_config
-from .envs.env_wrappers import SubprocVecEnv, DummyVecEnv
+from envs.env_wrappers import SubprocVecEnv, DummyVecEnv
 
 """Train script for MPEs."""
 
@@ -124,9 +124,9 @@ def main(args):
 
     # run experiments
     if all_args.share_policy:
-        from mappo.runner.shared.env_runner import EnvRunner as Runner
+        from runner.shared.env_runner import EnvRunner as Runner
     else:
-        from mappo.runner.separated.env_runner import EnvRunner as Runner
+        from runner.separated.env_runner import EnvRunner as Runner
 
     runner = Runner(config)
     runner.run()

@@ -3,7 +3,7 @@ import os
 import numpy as np
 import torch
 from tensorboardX import SummaryWriter
-from mappo.utils.shared_buffer import SharedReplayBuffer
+from utils.shared_buffer import SharedReplayBuffer
 
 def _t2n(x):
     """Convert torch tensor to a numpy array."""
@@ -63,8 +63,8 @@ class Runner(object):
             if not os.path.exists(self.save_dir):
                 os.makedirs(self.save_dir)
 
-        from mappo.algorithms.algorithm.r_mappo import RMAPPO as TrainAlgo
-        from mappo.algorithms.algorithm.rMAPPOPolicy import RMAPPOPolicy as Policy
+        from algorithms.algorithm.r_mappo import RMAPPO as TrainAlgo
+        from algorithms.algorithm.rMAPPOPolicy import RMAPPOPolicy as Policy
 
         share_observation_space = self.envs.share_observation_space[0] if self.use_centralized_V else self.envs.observation_space[0]
 
