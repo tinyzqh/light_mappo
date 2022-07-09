@@ -22,7 +22,7 @@ MAPPO原版代码对于环境的封装过于复杂，本项目直接将环境封
 
 ## 用法
 
-- 环境部分是一个空的的实现，文件`light_mappo/envs/env_wrappers.py`里面环境部分的实现：[Code](https://github.com/tinyzqh/light_mappo/blob/main/envs/env_wrappers.py)
+- 环境部分是一个空的的实现，文件`light_mappo/envs/env_core.py`里面环境部分的实现：[Code](https://github.com/tinyzqh/light_mappo/blob/main/envs/env_wrappers.py)
 
 ```python
 class Env(object):
@@ -63,7 +63,7 @@ class Env(object):
 ```
 
 
-只需要编写这一部分的代码，就可以无缝衔接MAPPO。初始版本，后期这一部分会单独提出来。
+只需要编写这一部分的代码，就可以无缝衔接MAPPO。在env_core.py之后，单独提出来了两个文件env_discrete.py和env_continuous.py这两个文件用于封装处理动作空间和离散动作空间。在algorithms/utils/act.py中elif self.continuous_action:这个判断逻辑也是用来处理连续动作空间的。和runner/shared/env_runner.py部分的# TODO 这里改造成自己环境需要的形式即可都是用来处理连续动作空间的。
 
 
 ## Related Efforts

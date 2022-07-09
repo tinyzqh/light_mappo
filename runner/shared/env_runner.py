@@ -16,7 +16,6 @@ import time
 import numpy as np
 import torch
 from runner.shared.base_runner import Runner
-import wandb
 import imageio
 
 
@@ -133,9 +132,12 @@ class EnvRunner(Runner):
                 else:
                     actions_env = np.concatenate((actions_env, uc_actions_env), axis=2)
         elif self.envs.action_space[0].__class__.__name__ == 'Discrete':
+            # actions  --> actions_env : shape:[10, 1] --> [5, 2, 5]
             actions_env = np.squeeze(np.eye(self.envs.action_space[0].n)[actions], 2)
         else:
-            raise NotImplementedError
+            # TODO 这里改造成自己环境需要的形式即可
+            actions_env = actions
+            # raise NotImplementedError
 
         return values, actions, action_log_probs, rnn_states, rnn_states_critic, actions_env
 

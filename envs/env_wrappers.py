@@ -7,214 +7,294 @@ Modified from OpenAI Baselines code to work with multi-agent envs
 """
 
 import numpy as np
-import gym
-from gym import spaces
-from envs.env import Env
+import torch
+from multiprocessing import Process, Pipe
+from abc import ABC, abstractmethod
 
-
-class MultiDiscrete(gym.Space):
+def tile_images(img_nhwc):
     """
-    - The multi-discrete action space consists of a series of discrete action spaces with different parameters
-    - It can be adapted to both a Discrete action space or a continuous (Box) action space
-    - It is useful to represent game controllers or keyboards where each key can be represented as a discrete action space
-    - It is parametrized by passing an array of arrays containing [min, max] for each discrete action space
-       where the discrete action space can take any integers from `min` to `max` (both inclusive)
-    Note: A value of 0 always need to represent the NOOP action.
-    e.g. Nintendo Game Controller
-    - Can be conceptualized as 3 discrete action spaces:
-        1) Arrow Keys: Discrete 5  - NOOP[0], UP[1], RIGHT[2], DOWN[3], LEFT[4]  - params: min: 0, max: 4
-        2) Button A:   Discrete 2  - NOOP[0], Pressed[1] - params: min: 0, max: 1
-        3) Button B:   Discrete 2  - NOOP[0], Pressed[1] - params: min: 0, max: 1
-    - Can be initialized as
-        MultiDiscrete([ [0,4], [0,1], [0,1] ])
+    Tile N images into one big PxQ image
+    (P,Q) are chosen to be as close as possible, and if N
+    is square, then P=Q.
+    input: img_nhwc, list or array of images, ndim=4 once turned into array
+        n = batch index, h = height, w = width, c = channel
+    returns:
+        bigim_HWc, ndarray with ndim=3
+    """
+    img_nhwc = np.asarray(img_nhwc)
+    N, h, w, c = img_nhwc.shape
+    H = int(np.ceil(np.sqrt(N)))
+    W = int(np.ceil(float(N)/H))
+    img_nhwc = np.array(list(img_nhwc) + [img_nhwc[0]*0 for _ in range(N, H*W)])
+    img_HWhwc = img_nhwc.reshape(H, W, h, w, c)
+    img_HhWwc = img_HWhwc.transpose(0, 2, 1, 3, 4)
+    img_Hh_Ww_c = img_HhWwc.reshape(H*h, W*w, c)
+    return img_Hh_Ww_c
+
+class CloudpickleWrapper(object):
+    """
+    Uses cloudpickle to serialize contents (otherwise multiprocessing tries to use pickle)
     """
 
-    def __init__(self, array_of_param_array):
-        super().__init__()
-        self.low = np.array([x[0] for x in array_of_param_array])
-        self.high = np.array([x[1] for x in array_of_param_array])
-        self.num_discrete_space = self.low.shape[0]
-        self.n = np.sum(self.high) + 2
+    def __init__(self, x):
+        self.x = x
 
-    def sample(self):
-        """ Returns a array with one sample from each discrete action space """
-        # For each row: round(random .* (max - min) + min, 0)
-        random_array = np.random.rand(self.num_discrete_space)
-        return [int(x) for x in np.floor(np.multiply((self.high - self.low + 1.), random_array) + self.low)]
+    def __getstate__(self):
+        import cloudpickle
+        return cloudpickle.dumps(self.x)
 
-    def contains(self, x):
-        return len(x) == self.num_discrete_space and (np.array(x) >= self.low).all() and (
-                    np.array(x) <= self.high).all()
+    def __setstate__(self, ob):
+        import pickle
+        self.x = pickle.loads(ob)
+
+def worker(remote, parent_remote, env_fn_wrapper):
+    parent_remote.close()
+    env = env_fn_wrapper.x()
+    while True:
+        cmd, data = remote.recv()
+        if cmd == 'step':
+            ob, reward, done, info = env.step(data)
+            if 'bool' in done.__class__.__name__:
+                if done:
+                    ob = env.reset()
+            else:
+                if np.all(done):
+                    ob = env.reset()
+
+            remote.send((ob, reward, done, info))
+        elif cmd == 'reset':
+            ob = env.reset()
+            remote.send((ob))
+        elif cmd == 'render':
+            if data == "rgb_array":
+                fr = env.render(mode=data)
+                remote.send(fr)
+            elif data == "human":
+                env.render(mode=data)
+        elif cmd == 'reset_task':
+            ob = env.reset_task()
+            remote.send(ob)
+        elif cmd == 'close':
+            env.close()
+            remote.close()
+            break
+        elif cmd == 'get_spaces':
+            remote.send((env.observation_space, env.share_observation_space, env.action_space))
+        else:
+            raise NotImplementedError
+
+class ShareVecEnv(ABC):
+    """
+    An abstract asynchronous, vectorized environment.
+    Used to batch data from multiple copies of an environment, so that
+    each observation becomes an batch of observations, and expected action is a batch of actions to
+    be applied per-environment.
+    """
+    closed = False
+    viewer = None
+
+    metadata = {
+        'render.modes': ['human', 'rgb_array']
+    }
+
+    def __init__(self, num_envs, observation_space, share_observation_space, action_space):
+        self.num_envs = num_envs
+        self.observation_space = observation_space
+        self.share_observation_space = share_observation_space
+        self.action_space = action_space
+
+    @abstractmethod
+    def reset(self):
+        """
+        Reset all the environments and return an array of
+        observations, or a dict of observation arrays.
+        If step_async is still doing work, that work will
+        be cancelled and step_wait() should not be called
+        until step_async() is invoked again.
+        """
+        pass
+
+    @abstractmethod
+    def step_async(self, actions):
+        """
+        Tell all the environments to start taking a step
+        with the given actions.
+        Call step_wait() to get the results of the step.
+        You should not call this if a step_async run is
+        already pending.
+        """
+        pass
+
+    @abstractmethod
+    def step_wait(self):
+        """
+        Wait for the step taken with step_async().
+        Returns (obs, rews, dones, infos):
+         - obs: an array of observations, or a dict of
+                arrays of observations.
+         - rews: an array of rewards
+         - dones: an array of "episode done" booleans
+         - infos: a sequence of info objects
+        """
+        pass
+
+    def close_extras(self):
+        """
+        Clean up the  extra resources, beyond what's in this base class.
+        Only runs when not self.closed.
+        """
+        pass
+
+    def close(self):
+        if self.closed:
+            return
+        if self.viewer is not None:
+            self.viewer.close()
+        self.close_extras()
+        self.closed = True
+
+    def step(self, actions):
+        """
+        Step the environments synchronously.
+        This is available for backwards compatibility.
+        """
+        self.step_async(actions)
+        return self.step_wait()
+
+    def render(self, mode='human'):
+        imgs = self.get_images()
+        bigimg = tile_images(imgs)
+        if mode == 'human':
+            self.get_viewer().imshow(bigimg)
+            return self.get_viewer().isopen
+        elif mode == 'rgb_array':
+            return bigimg
+        else:
+            raise NotImplementedError
+
+    def get_images(self):
+        """
+        Return RGB images from each environment
+        """
+        raise NotImplementedError
 
     @property
-    def shape(self):
-        return self.num_discrete_space
+    def unwrapped(self):
+        if isinstance(self, VecEnvWrapper):
+            return self.venv.unwrapped
+        else:
+            return self
 
-    def __repr__(self):
-        return "MultiDiscrete" + str(self.num_discrete_space)
+    def get_viewer(self):
+        if self.viewer is None:
+            from gym.envs.classic_control import rendering
+            self.viewer = rendering.SimpleImageViewer()
+        return self.viewer
 
-    def __eq__(self, other):
-        return np.array_equal(self.low, other.low) and np.array_equal(self.high, other.high)
-
-
-class SubprocVecEnv(object):
-    def __init__(self, all_args):
+class SubprocVecEnv(ShareVecEnv):
+    def __init__(self, env_fns, spaces=None):
         """
         envs: list of gym environments to run in subprocesses
         """
+        self.waiting = False
+        self.closed = False
+        nenvs = len(env_fns)
+        self.remotes, self.work_remotes = zip(*[Pipe() for _ in range(nenvs)])
+        self.ps = [Process(target=worker, args=(work_remote, remote, CloudpickleWrapper(env_fn)))
+                   for (work_remote, remote, env_fn) in zip(self.work_remotes, self.remotes, env_fns)]
+        for p in self.ps:
+            p.daemon = True  # if the main process crashes, we should not cause things to hang
+            p.start()
+        for remote in self.work_remotes:
+            remote.close()
 
-        self.env_list = [Env(i) for i in range(all_args.n_rollout_threads)]
-        self.num_envs = all_args.n_rollout_threads
+        self.remotes[0].send(('get_spaces', None))
+        observation_space, share_observation_space, action_space = self.remotes[0].recv()
+        ShareVecEnv.__init__(self, len(env_fns), observation_space,
+                             share_observation_space, action_space)
 
-        self.num_agent = self.env_list[0].agent_num
-        self.signal_obs_dim = self.env_list[0].obs_dim
-        self.signal_action_dim = self.env_list[0].action_dim
+    def step_async(self, actions):
+        for remote, action in zip(self.remotes, actions):
+            remote.send(('step', action))
+        self.waiting = True
 
-        self.u_range = 1.0  # control range for continuous control
-        self.movable = True
-
-        # environment parameters
-        # self.discrete_action_space = True
-        self.discrete_action_space = True
-
-        # if true, action is a number 0...N, otherwise action is a one-hot N-dimensional vector
-        self.discrete_action_input = False
-        # if true, even the action is continuous, action will be performed discretely
-        self.force_discrete_action = False
-
-        # configure spaces
-        self.action_space = []
-        self.observation_space = []
-        self.share_observation_space = []
-        share_obs_dim = 0
-        for agent in range(self.num_agent):
-            total_action_space = []
-
-            # physical action space
-            if self.discrete_action_space:
-                u_action_space = spaces.Discrete(self.signal_action_dim)  # 5个离散的动作
-            else:
-                u_action_space = spaces.Box(low=-self.u_range, high=+self.u_range, shape=(2,), dtype=np.float32)  # [-1,1]
-            if self.movable:
-                total_action_space.append(u_action_space)
-
-            # total action space
-            if len(total_action_space) > 1:
-                # all action spaces are discrete, so simplify to MultiDiscrete action space
-                if all([isinstance(act_space, spaces.Discrete) for act_space in total_action_space]):
-                    act_space = MultiDiscrete([[0, act_space.n - 1] for act_space in total_action_space])
-                else:
-                    act_space = spaces.Tuple(total_action_space)
-                self.action_space.append(act_space)
-            else:
-                self.action_space.append(total_action_space[0])
-
-            # observation space
-            share_obs_dim += self.signal_obs_dim
-            self.observation_space.append(spaces.Box(low=-np.inf, high=+np.inf, shape=(self.signal_obs_dim,),
-                                                     dtype=np.float32))  # [-inf,inf]
-
-        self.share_observation_space = [spaces.Box(low=-np.inf, high=+np.inf, shape=(share_obs_dim,),
-                                                   dtype=np.float32) for _ in range(self.num_agent)]
-
-    def step(self, actions):
-        """
-        输入actions纬度假设：
-        # actions shape = (5, 2, 5)
-        # 5个线程的环境，里面有2个智能体，每个智能体的动作是一个one_hot的5维编码
-        """
-
-        results = [env.step(action) for env, action in zip(self.env_list, actions)]
+    def step_wait(self):
+        results = [remote.recv() for remote in self.remotes]
+        self.waiting = False
         obs, rews, dones, infos = zip(*results)
         return np.stack(obs), np.stack(rews), np.stack(dones), infos
 
     def reset(self):
-        obs = [env.reset() for env in self.env_list]
+        for remote in self.remotes:
+            remote.send(('reset', None))
+        obs = [remote.recv() for remote in self.remotes]
         return np.stack(obs)
 
+
+    def reset_task(self):
+        for remote in self.remotes:
+            remote.send(('reset_task', None))
+        return np.stack([remote.recv() for remote in self.remotes])
+
     def close(self):
-        pass
+        if self.closed:
+            return
+        if self.waiting:
+            for remote in self.remotes:
+                remote.recv()
+        for remote in self.remotes:
+            remote.send(('close', None))
+        for p in self.ps:
+            p.join()
+        self.closed = True
 
     def render(self, mode="rgb_array"):
-        pass
-
+        for remote in self.remotes:
+            remote.send(('render', mode))
+        if mode == "rgb_array":
+            frame = [remote.recv() for remote in self.remotes]
+            return np.stack(frame)
 
 # single env
-class DummyVecEnv(object):
-    def __init__(self, all_args):
-        """
-        envs: list of gym environments to run in subprocesses
-        """
+class DummyVecEnv(ShareVecEnv):
+    def __init__(self, env_fns):
+        self.envs = [fn() for fn in env_fns]
+        env = self.envs[0]
+        ShareVecEnv.__init__(self, len(
+            env_fns), env.observation_space, env.share_observation_space, env.action_space)
+        self.actions = None
 
-        self.env_list = [Env(i) for i in range(all_args.n_eval_rollout_threadss)]
-        self.num_envs = all_args.n_rollout_threads
+    def step_async(self, actions):
+        self.actions = actions
 
-        self.num_agent = self.env_list[0].agent_num
+    def step_wait(self):
+        results = [env.step(a) for (a, env) in zip(self.actions, self.envs)]
+        obs, rews, dones, infos = map(np.array, zip(*results))
 
-        self.u_range = 1.0  # control range for continuous control
-        self.movable = True
-
-        # environment parameters
-        self.discrete_action_space = True
-
-        # if true, action is a number 0...N, otherwise action is a one-hot N-dimensional vector
-        self.discrete_action_input = False
-        # if true, even the action is continuous, action will be performed discretely
-        self.force_discrete_action = False
-        # in this env, force_discrete_action == False��because world do not have discrete_action
-
-        # configure spaces
-        self.action_space = []
-        self.observation_space = []
-        self.share_observation_space = []
-        share_obs_dim = 0
-        for agent_num in range(self.num_agent):
-            total_action_space = []
-
-            # physical action space
-            if self.discrete_action_space:
-                u_action_space = spaces.Discrete(5)  # 5个离散的动作
+        for (i, done) in enumerate(dones):
+            if 'bool' in done.__class__.__name__:
+                if done:
+                    obs[i] = self.envs[i].reset()
             else:
-                u_action_space = spaces.Box(low=-self.u_range, high=+self.u_range, shape=(2,), dtype=np.float32)  # [-1,1]
-            if self.movable:
-                total_action_space.append(u_action_space)
+                if np.all(done):
+                    obs[i] = self.envs[i].reset()
 
-            # total action space
-            if len(total_action_space) > 1:
-                # all action spaces are discrete, so simplify to MultiDiscrete action space
-                if all([isinstance(act_space, spaces.Discrete) for act_space in total_action_space]):
-                    act_space = MultiDiscrete([[0, act_space.n - 1] for act_space in total_action_space])
-                else:
-                    act_space = spaces.Tuple(total_action_space)
-                self.action_space.append(act_space)
-            else:
-                self.action_space.append(total_action_space[0])
-
-            # observation space
-            obs_dim = 14  # 单个智能体的观测维度
-            share_obs_dim += obs_dim
-            self.observation_space.append(spaces.Box(low=-np.inf, high=+np.inf, shape=(obs_dim,), dtype=np.float32))  # [-inf,inf]
-
-        self.share_observation_space = [spaces.Box(low=-np.inf, high=+np.inf, shape=(share_obs_dim,),
-                                                   dtype=np.float32) for _ in range(self.num_agent)]
-
-    def step(self, actions):
-        """
-        输入actions纬度假设：
-        # actions shape = (5, 2, 5)
-        # 5个线程的环境，里面有2个智能体，每个智能体的动作是一个one_hot的5维编码
-        """
-
-        results = [env.step(action) for env, action in zip(self.env_list, actions)]
-        obs, rews, dones, infos = zip(*results)
-        return np.stack(obs), np.stack(rews), np.stack(dones), infos
+        self.actions = None
+        return obs, rews, dones, infos
 
     def reset(self):
-        obs = [env.reset() for env in self.env_list]
-        return np.stack(obs)
+        obs = [env.reset() for env in self.envs]
+        return np.array(obs)
 
     def close(self):
-        pass
+        for env in self.envs:
+            env.close()
 
-    def render(self, mode="rgb_array"):
-        pass
+    def render(self, mode="human"):
+        if mode == "rgb_array":
+            return np.array([env.render(mode=mode) for env in self.envs])
+        elif mode == "human":
+            for env in self.envs:
+                env.render(mode=mode)
+        else:
+            raise NotImplementedError

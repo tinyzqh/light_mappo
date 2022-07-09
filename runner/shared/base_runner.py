@@ -1,4 +1,3 @@
-import wandb
 import os
 import numpy as np
 import torch
@@ -37,7 +36,6 @@ class Runner(object):
         self.n_render_rollout_threads = self.all_args.n_render_rollout_threads
         self.use_linear_lr_decay = self.all_args.use_linear_lr_decay
         self.hidden_size = self.all_args.hidden_size
-        self.use_wandb = self.all_args.use_wandb
         self.use_render = self.all_args.use_render
         self.recurrent_N = self.all_args.recurrent_N
 
@@ -50,18 +48,14 @@ class Runner(object):
         # dir
         self.model_dir = self.all_args.model_dir
 
-        if self.use_wandb:
-            self.save_dir = str(wandb.run.dir)
-            self.run_dir = str(wandb.run.dir)
-        else:
-            self.run_dir = config["run_dir"]
-            self.log_dir = str(self.run_dir / 'logs')
-            if not os.path.exists(self.log_dir):
-                os.makedirs(self.log_dir)
-            self.writter = SummaryWriter(self.log_dir)
-            self.save_dir = str(self.run_dir / 'models')
-            if not os.path.exists(self.save_dir):
-                os.makedirs(self.save_dir)
+        self.run_dir = config["run_dir"]
+        self.log_dir = str(self.run_dir / 'logs')
+        if not os.path.exists(self.log_dir):
+            os.makedirs(self.log_dir)
+        self.writter = SummaryWriter(self.log_dir)
+        self.save_dir = str(self.run_dir / 'models')
+        if not os.path.exists(self.save_dir):
+            os.makedirs(self.save_dir)
 
         from algorithms.algorithm.r_mappo import RMAPPO as TrainAlgo
         from algorithms.algorithm.rMAPPOPolicy import RMAPPOPolicy as Policy
@@ -146,10 +140,7 @@ class Runner(object):
         :param total_num_steps: (int) total number of training env steps.
         """
         for k, v in train_infos.items():
-            if self.use_wandb:
-                wandb.log({k: v}, step=total_num_steps)
-            else:
-                self.writter.add_scalars(k, {k: v}, total_num_steps)
+            self.writter.add_scalars(k, {k: v}, total_num_steps)
 
     def log_env(self, env_infos, total_num_steps):
         """
@@ -159,7 +150,4 @@ class Runner(object):
         """
         for k, v in env_infos.items():
             if len(v)>0:
-                if self.use_wandb:
-                    wandb.log({k: np.mean(v)}, step=total_num_steps)
-                else:
-                    self.writter.add_scalars(k, {k: np.mean(v)}, total_num_steps)
+                self.writter.add_scalars(k, {k: np.mean(v)}, total_num_steps)
