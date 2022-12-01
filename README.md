@@ -22,14 +22,15 @@ MAPPO原版代码对于环境的封装过于复杂，本项目直接将环境封
 
 ## 用法
 
-- 环境部分是一个空的的实现，文件`light_mappo/envs/env_core.py`里面环境部分的实现：[Code](https://github.com/tinyzqh/light_mappo/blob/main/envs/env_wrappers.py)
+- 环境部分是一个空的的实现，文件`light_mappo/envs/env_core.py`里面环境部分的实现：[Code](https://github.com/tinyzqh/light_mappo/blob/main/envs/env_core.py)
 
 ```python
-class Env(object):
+import numpy as np
+class EnvCore(object):
     """
     # 环境中的智能体
     """
-    def __init__(self, i):
+    def __init__(self):
         self.agent_num = 2  # 设置智能体(小飞机)的个数，这里设置为两个
         self.obs_dim = 14  # 设置智能体的观测纬度
         self.action_dim = 5  # 设置智能体的动作纬度，这里假定为一个五个纬度的

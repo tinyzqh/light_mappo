@@ -31,9 +31,8 @@ class DiscreteActionEnv(object):
         self.share_observation_space = []
 
         share_obs_dim = 0
+        total_action_space = []
         for agent in range(self.num_agent):
-            total_action_space = []
-
             # physical action space
             u_action_space = spaces.Discrete(self.signal_action_dim)  # 5个离散的动作
 
