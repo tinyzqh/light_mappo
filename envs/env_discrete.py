@@ -82,7 +82,7 @@ class DiscreteActionEnv(object):
     def seed(self, seed):
         pass
 
-class MultiDiscrete(gym.Space):
+class MultiDiscrete():
     """
     - The multi-discrete action space consists of a series of discrete action spaces with different parameters
     - It can be adapted to both a Discrete action space or a continuous (Box) action space

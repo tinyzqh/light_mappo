@@ -5,18 +5,11 @@
 # @File    : env_runner.py
 """
 
-"""
-# @Time    : 2021/7/1 7:04 下午
-# @Author  : hezhiqiang01
-# @Email   : hezhiqiang01@baidu.com
-# @File    : huaru_runner.py
-"""
-
 import time
 import numpy as np
 import torch
 from runner.shared.base_runner import Runner
-import imageio
+# import imageio
 
 
 def _t2n(x):
@@ -269,5 +262,5 @@ class EnvRunner(Runner):
 
             print("average episode rewards is: " + str(np.mean(np.sum(np.array(episode_rewards), axis=0))))
 
-        if self.all_args.save_gifs:
-            imageio.mimsave(str(self.gif_dir) + '/render.gif', all_frames, duration=self.all_args.ifi)
+        # if self.all_args.save_gifs:
+        #     imageio.mimsave(str(self.gif_dir) + '/render.gif', all_frames, duration=self.all_args.ifi)

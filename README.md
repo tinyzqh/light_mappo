@@ -66,6 +66,7 @@ class EnvCore(object):
 
 只需要编写这一部分的代码，就可以无缝衔接MAPPO。在env_core.py之后，单独提出来了两个文件env_discrete.py和env_continuous.py这两个文件用于封装处理动作空间和离散动作空间。在algorithms/utils/act.py中elif self.continuous_action:这个判断逻辑也是用来处理连续动作空间的。和runner/shared/env_runner.py部分的# TODO 这里改造成自己环境需要的形式即可都是用来处理连续动作空间的。
 
+在train.py文件里面，选择注释连续环境，或者离散环境进行demo环境的切换。
 
 ## Related Efforts
 

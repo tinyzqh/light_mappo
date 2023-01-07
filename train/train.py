@@ -22,10 +22,11 @@ from envs.env_wrappers import SubprocVecEnv, DummyVecEnv
 def make_train_env(all_args):
     def get_env_fn(rank):
         def init_env():
-            # from envs.env_continuous import ContinuousActionEnv
-            # env = ContinuousActionEnv()
-            from envs.env_discrete import DiscreteActionEnv
-            env = DiscreteActionEnv()
+            # TODO 注意注意，这里选择连续还是离散可以选择注释上面两行，或者下面两行。
+            from envs.env_continuous import ContinuousActionEnv
+            env = ContinuousActionEnv()
+            # from envs.env_discrete import DiscreteActionEnv
+            # env = DiscreteActionEnv()
             env.seed(all_args.seed + rank * 1000)
             return env
         return init_env
@@ -35,8 +36,11 @@ def make_train_env(all_args):
 def make_eval_env(all_args):
     def get_env_fn(rank):
         def init_env():
-            from envs.env_discrete import DiscreteActionEnv
-            env = DiscreteActionEnv()
+            # TODO 注意注意，这里选择连续还是离散可以选择注释上面两行，或者下面两行。
+            from envs.env_continuous import ContinuousActionEnv
+            env = ContinuousActionEnv()
+            # from envs.env_discrete import DiscreteActionEnv
+            # env = DiscreteActionEnv()
             env.seed(all_args.seed + rank * 1000)
             return env
         return init_env
