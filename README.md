@@ -4,7 +4,7 @@ Lightweight version of MAPPO to help you quickly migrate to your local environme
 
 轻量版MAPPO，帮助你快速移植到本地环境。
 
-- [Bilibili](https://www.bilibili.com/video/BV1bd4y1L73N/?spm_id_from=333.999.0.0&vd_source=d8ab7686ea514acb6635faa5d2227d61)
+- [视频解析](https://www.bilibili.com/video/BV1bd4y1L73N/?spm_id_from=333.999.0.0&vd_source=d8ab7686ea514acb6635faa5d2227d61)
 
 
 ## Table of Contents
