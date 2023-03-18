@@ -2,43 +2,41 @@
 
 Lightweight version of MAPPO to help you quickly migrate to your local environment.
 
-轻量版MAPPO，帮助你快速移植到本地环境。
-
-- [视频解析](https://www.bilibili.com/video/BV1bd4y1L73N/?spm_id_from=333.999.0.0&vd_source=d8ab7686ea514acb6635faa5d2227d61)
-
+- [Video (in Chinese)](https://www.bilibili.com/video/BV1bd4y1L73N)  
+This is a translated English version. Please click [here](README_CN.md) for the orginal Chinese readme.
 
 ## Table of Contents
 
-- [背景](#背景)
-- [安装](#安装)
-- [用法](#用法)
+- [Background](#Background)
+- [Installation](#Installation)
+- [Usage](#Usage)
 
-## 背景
+## Background
 
-MAPPO原版代码对于环境的封装过于复杂，本项目直接将环境封装抽取出来。更加方便将MAPPO代码移植到自己的项目上。
+The original MAPPO code was too complex in terms of environment encapsulation, so this project directly extracts and encapsulates the environment. This makes it easier to transfer the MAPPO code to your own project.
 
-## 安装
+## Installation
 
-直接将代码下载下来，创建一个Conda环境，然后运行代码，缺啥补啥包。具体什么包以后再添加。
+Simply download the code, create a Conda environment, and then run the code, adding packages as needed. Specific packages will be added later.
 
-## 用法
+## Usage
 
-- 环境部分是一个空的的实现，文件`light_mappo/envs/env_core.py`里面环境部分的实现：[Code](https://github.com/tinyzqh/light_mappo/blob/main/envs/env_core.py)
+- The environment part is an empty implementation, and the implementation of the environment part in the light_mappo/envs/env_core.py file is: [Code] (https://github.com/tinyzqh/light_mappo/blob/main/envs/env_core.py)
 
 ```python
 import numpy as np
 class EnvCore(object):
     """
-    # 环境中的智能体
+    # Environment Agent
     """
     def __init__(self):
-        self.agent_num = 2  # 设置智能体(小飞机)的个数，这里设置为两个
-        self.obs_dim = 14  # 设置智能体的观测纬度
-        self.action_dim = 5  # 设置智能体的动作纬度，这里假定为一个五个纬度的
+        self.agent_num = 2 # set the number of agents(aircrafts), here set to two
+        self.obs_dim = 14 # set the observation dimension of agents
+        self.action_dim = 5 # set the action dimension of agents, here set to a five-dimensional
 
     def reset(self):
         """
-        # self.agent_num设定为2个智能体时，返回值为一个list，每个list里面为一个shape = (self.obs_dim, )的观测数据
+        # When self.agent_num is set to 2 agents, the return value is a list, and each list contains observation data of shape = (self.obs_dim,)
         """
         sub_agent_obs = []
         for i in range(self.agent_num):
@@ -48,8 +46,8 @@ class EnvCore(object):
 
     def step(self, actions):
         """
-        # self.agent_num设定为2个智能体时，actions的输入为一个2纬的list，每个list里面为一个shape = (self.action_dim, )的动作数据
-        # 默认参数情况下，输入为一个list，里面含有两个元素，因为动作纬度为5，所里每个元素shape = (5, )
+        # When self.agent_num is set to 2 agents, the input of actions is a two-dimensional list, and each list contains action data of shape = (self.action_dim,).
+        # By default, the input is a list containing two elements, because the action dimension is 5, so each element has a shape of (5,)
         """
         sub_agent_obs = []
         sub_agent_reward = []
@@ -65,9 +63,9 @@ class EnvCore(object):
 ```
 
 
-只需要编写这一部分的代码，就可以无缝衔接MAPPO。在env_core.py之后，单独提出来了两个文件env_discrete.py和env_continuous.py这两个文件用于封装处理动作空间和离散动作空间。在algorithms/utils/act.py中elif self.continuous_action:这个判断逻辑也是用来处理连续动作空间的。和runner/shared/env_runner.py部分的# TODO 这里改造成自己环境需要的形式即可都是用来处理连续动作空间的。
+Just write this part of the code, and you can seamlessly connect with MAPPO. After env_core.py, two files, env_discrete.py and env_continuous.py, were separately extracted to encapsulate the action space and discrete action space. In elif self.continuous_action: in algorithms/utils/act.py, this judgment logic is also used to handle continuous action spaces. The # TODO here in runner/shared/env_runner.py is also used to handle continuous action spaces.
 
-在train.py文件里面，选择注释连续环境，或者离散环境进行demo环境的切换。
+In the train.py file, choose to comment out continuous environment or discrete environment to switch the demo environment.
 
 ## Related Efforts
 
@@ -76,6 +74,9 @@ class EnvCore(object):
 ## Maintainers
 
 [@tinyzqh](https://github.com/tinyzqh).
+
+## Translator
+[@tianyu-z](https://github.com/tianyu-z)
 
 ## License
 

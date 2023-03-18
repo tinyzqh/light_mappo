@@ -12,7 +12,11 @@ from envs.env_core import EnvCore
 
 
 class DiscreteActionEnv(object):
-    """对于离散动作环境的封装"""
+    """
+    对于离散动作环境的封装
+    Wrapper for discrete action environment.
+    """
+
     def __init__(self):
         self.env = EnvCore()
         self.num_agent = self.env.agent_num
@@ -42,8 +46,15 @@ class DiscreteActionEnv(object):
             # total action space
             if len(total_action_space) > 1:
                 # all action spaces are discrete, so simplify to MultiDiscrete action space
-                if all([isinstance(act_space, spaces.Discrete) for act_space in total_action_space]):
-                    act_space = MultiDiscrete([[0, act_space.n - 1] for act_space in total_action_space])
+                if all(
+                    [
+                        isinstance(act_space, spaces.Discrete)
+                        for act_space in total_action_space
+                    ]
+                ):
+                    act_space = MultiDiscrete(
+                        [[0, act_space.n - 1] for act_space in total_action_space]
+                    )
                 else:
                     act_space = spaces.Tuple(total_action_space)
                 self.action_space.append(act_space)
@@ -52,17 +63,30 @@ class DiscreteActionEnv(object):
 
             # observation space
             share_obs_dim += self.signal_obs_dim
-            self.observation_space.append(spaces.Box(low=-np.inf, high=+np.inf, shape=(self.signal_obs_dim,),
-                                                     dtype=np.float32))  # [-inf,inf]
+            self.observation_space.append(
+                spaces.Box(
+                    low=-np.inf,
+                    high=+np.inf,
+                    shape=(self.signal_obs_dim,),
+                    dtype=np.float32,
+                )
+            )  # [-inf,inf]
 
-        self.share_observation_space = [spaces.Box(low=-np.inf, high=+np.inf, shape=(share_obs_dim,),
-                                                   dtype=np.float32) for _ in range(self.num_agent)]
+        self.share_observation_space = [
+            spaces.Box(
+                low=-np.inf, high=+np.inf, shape=(share_obs_dim,), dtype=np.float32
+            )
+            for _ in range(self.num_agent)
+        ]
 
     def step(self, actions):
         """
-        输入actions纬度假设：
+        输入actions维度假设：
         # actions shape = (5, 2, 5)
         # 5个线程的环境，里面有2个智能体，每个智能体的动作是一个one_hot的5维编码
+        Input actions dimension assumption:
+        # actions shape = (5, 2, 5)
+        # 5 threads of the environment, with 2 intelligent agents inside, and each intelligent agent's action is a 5-dimensional one_hot encoding
         """
 
         results = self.env.step(actions)
@@ -82,7 +106,8 @@ class DiscreteActionEnv(object):
     def seed(self, seed):
         pass
 
-class MultiDiscrete():
+
+class MultiDiscrete:
     """
     - The multi-discrete action space consists of a series of discrete action spaces with different parameters
     - It can be adapted to both a Discrete action space or a continuous (Box) action space
@@ -107,14 +132,22 @@ class MultiDiscrete():
         self.n = np.sum(self.high) + 2
 
     def sample(self):
-        """ Returns a array with one sample from each discrete action space """
+        """Returns a array with one sample from each discrete action space"""
         # For each row: round(random .* (max - min) + min, 0)
         random_array = np.random.rand(self.num_discrete_space)
-        return [int(x) for x in np.floor(np.multiply((self.high - self.low + 1.), random_array) + self.low)]
+        return [
+            int(x)
+            for x in np.floor(
+                np.multiply((self.high - self.low + 1.0), random_array) + self.low
+            )
+        ]
 
     def contains(self, x):
-        return len(x) == self.num_discrete_space and (np.array(x) >= self.low).all() and (
-                    np.array(x) <= self.high).all()
+        return (
+            len(x) == self.num_discrete_space
+            and (np.array(x) >= self.low).all()
+            and (np.array(x) <= self.high).all()
+        )
 
     @property
     def shape(self):
@@ -124,7 +157,9 @@ class MultiDiscrete():
         return "MultiDiscrete" + str(self.num_discrete_space)
 
     def __eq__(self, other):
-        return np.array_equal(self.low, other.low) and np.array_equal(self.high, other.high)
+        return np.array_equal(self.low, other.low) and np.array_equal(
+            self.high, other.high
+        )
 
 
 if __name__ == "__main__":
