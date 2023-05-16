@@ -36,30 +36,30 @@ class DiscreteActionEnv(object):
 
         share_obs_dim = 0
         total_action_space = []
-        for agent in range(self.num_agent):
+        for agent_idx in range(self.num_agent):
             # physical action space
             u_action_space = spaces.Discrete(self.signal_action_dim)  # 5个离散的动作
 
-            if self.movable:
-                total_action_space.append(u_action_space)
+            # if self.movable:
+            total_action_space.append(u_action_space)
 
             # total action space
-            if len(total_action_space) > 1:
-                # all action spaces are discrete, so simplify to MultiDiscrete action space
-                if all(
-                    [
-                        isinstance(act_space, spaces.Discrete)
-                        for act_space in total_action_space
-                    ]
-                ):
-                    act_space = MultiDiscrete(
-                        [[0, act_space.n - 1] for act_space in total_action_space]
-                    )
-                else:
-                    act_space = spaces.Tuple(total_action_space)
-                self.action_space.append(act_space)
-            else:
-                self.action_space.append(total_action_space[0])
+            # if len(total_action_space) > 1:
+            #     # all action spaces are discrete, so simplify to MultiDiscrete action space
+            #     if all(
+            #         [
+            #             isinstance(act_space, spaces.Discrete)
+            #             for act_space in total_action_space
+            #         ]
+            #     ):
+            #         act_space = MultiDiscrete(
+            #             [[0, act_space.n - 1] for act_space in total_action_space]
+            #         )
+            #     else:
+            #         act_space = spaces.Tuple(total_action_space)
+            # self.action_space.append(act_space)
+            # else:
+            self.action_space.append(total_action_space[agent_idx])
 
             # observation space
             share_obs_dim += self.signal_obs_dim
@@ -73,9 +73,7 @@ class DiscreteActionEnv(object):
             )  # [-inf,inf]
 
         self.share_observation_space = [
-            spaces.Box(
-                low=-np.inf, high=+np.inf, shape=(share_obs_dim,), dtype=np.float32
-            )
+            spaces.Box(low=-np.inf, high=+np.inf, shape=(share_obs_dim,), dtype=np.float32)
             for _ in range(self.num_agent)
         ]
 
@@ -135,12 +133,7 @@ class MultiDiscrete:
         """Returns a array with one sample from each discrete action space"""
         # For each row: round(random .* (max - min) + min, 0)
         random_array = np.random.rand(self.num_discrete_space)
-        return [
-            int(x)
-            for x in np.floor(
-                np.multiply((self.high - self.low + 1.0), random_array) + self.low
-            )
-        ]
+        return [int(x) for x in np.floor(np.multiply((self.high - self.low + 1.0), random_array) + self.low)]
 
     def contains(self, x):
         return (
@@ -157,9 +150,7 @@ class MultiDiscrete:
         return "MultiDiscrete" + str(self.num_discrete_space)
 
     def __eq__(self, other):
-        return np.array_equal(self.low, other.low) and np.array_equal(
-            self.high, other.high
-        )
+        return np.array_equal(self.low, other.low) and np.array_equal(self.high, other.high)
 
 
 if __name__ == "__main__":

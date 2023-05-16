@@ -31,11 +31,15 @@ def make_train_env(all_args):
         def init_env():
             # TODO 注意注意，这里选择连续还是离散可以选择注释上面两行，或者下面两行。
             # TODO Important, here you can choose continuous or discrete action space by uncommenting the above two lines or the below two lines.
+
             from envs.env_continuous import ContinuousActionEnv
 
             env = ContinuousActionEnv()
+
             # from envs.env_discrete import DiscreteActionEnv
+
             # env = DiscreteActionEnv()
+
             env.seed(all_args.seed + rank * 1000)
             return env
 
@@ -63,9 +67,7 @@ def make_eval_env(all_args):
 
 
 def parse_args(args, parser):
-    parser.add_argument(
-        "--scenario_name", type=str, default="MyEnv", help="Which scenario to run on"
-    )
+    parser.add_argument("--scenario_name", type=str, default="MyEnv", help="Which scenario to run on")
     parser.add_argument("--num_landmarks", type=int, default=3)
     parser.add_argument("--num_agents", type=int, default=2, help="number of players")
 
@@ -79,20 +81,16 @@ def main(args):
     all_args = parse_args(args, parser)
 
     if all_args.algorithm_name == "rmappo":
-        assert (
-            all_args.use_recurrent_policy or all_args.use_naive_recurrent_policy
-        ), "check recurrent policy!"
+        assert all_args.use_recurrent_policy or all_args.use_naive_recurrent_policy, "check recurrent policy!"
     elif all_args.algorithm_name == "mappo":
         assert (
-            all_args.use_recurrent_policy == False
-            and all_args.use_naive_recurrent_policy == False
+            all_args.use_recurrent_policy == False and all_args.use_naive_recurrent_policy == False
         ), "check recurrent policy!"
     else:
         raise NotImplementedError
 
     assert (
-        all_args.share_policy == True
-        and all_args.scenario_name == "simple_speaker_listener"
+        all_args.share_policy == True and all_args.scenario_name == "simple_speaker_listener"
     ) == False, "The simple_speaker_listener scenario can not use shared policy. Please check the config.py."
 
     # cuda

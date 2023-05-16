@@ -46,7 +46,7 @@ class DummyVecEnv():
         return obs, rews, dones, infos
 
     def reset(self):
-        obs = [env.reset() for env in self.envs]
+        obs = [env.reset() for env in self.envs] # [env_num, agent_num, obs_dim]
         return np.array(obs)
 
     def close(self):
