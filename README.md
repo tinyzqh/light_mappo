@@ -5,6 +5,18 @@ Lightweight version of MAPPO to help you quickly migrate to your local environme
 - [Video (in Chinese)](https://www.bilibili.com/video/BV1bd4y1L73N)  
 This is a translated English version. Please click [here](README_CN.md) for the orginal Chinese readme.
 
+This code has been used in the following paper:
+
+```bash
+@article{qiu2024enhancing,
+  title={Enhancing UAV Communications in Disasters: Integrating ESFM and MAPPO for Superior Performance},
+  author={Qiu, Wen and Shao, Xun and Loke, Seng W and He, Zhiqiang and Alqahtani, Fayez and Masui, Hiroshi},
+  journal={Journal of Circuits, Systems and Computers},
+  year={2024},
+  publisher={World Scientific}
+}
+```
+
 ## Table of Contents
 
 - [Background](#Background)
