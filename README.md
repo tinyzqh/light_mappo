@@ -15,6 +15,16 @@ This code has been used in the following paper:
   year={2024},
   publisher={World Scientific}
 }
+@article{qiu2024optimizing,
+  title={Optimizing Drone Energy Use for Emergency Communications in Disasters via Deep Reinforcement Learning},
+  author={Qiu, Wen and Shao, Xun and Masui, Hiroshi and Liu, William},
+  journal={Future Internet},
+  volume={16},
+  number={7},
+  pages={245},
+  year={2024},
+  publisher={MDPI}
+}
 ```
 
 ## Table of Contents
