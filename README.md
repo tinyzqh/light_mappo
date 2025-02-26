@@ -25,6 +25,14 @@ This code has been used in the following paper:
   year={2024},
   publisher={MDPI}
 }
+@inproceedings{yu2024path,
+  title={Path Planning for Multi-AGV Systems Based on Globally Guided Reinforcement Learning Approach},
+  author={Yu, Lanlin and Wang, Yusheng and Sheng, Zixiang and Xu, Pengfei and He, Zhiqiang and Du, Haibo},
+  booktitle={2024 IEEE International Conference on Unmanned Systems (ICUS)},
+  pages={819--825},
+  year={2024},
+  organization={IEEE}
+}
 ```
 
 ## Table of Contents
