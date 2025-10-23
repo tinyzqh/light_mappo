@@ -97,6 +97,20 @@ Just write this part of the code, and you can seamlessly connect with MAPPO. Aft
 
 In the train.py file, choose to comment out continuous environment or discrete environment to switch the demo environment.
 
+## Cite this work
+
+If you use `light_mappo`, please cite:
+
+```bibtex
+@software{light_mappo,
+  author  = {Zhiqiang He},
+  title   = {light\_mappo: Lightweight MAPPO implementation},
+  year    = {2025},
+  url     = {https://github.com/tinyzqh/light_mappo},
+  note    = {Version v0.1.0}
+}
+```
+
 ## Related Efforts
 
 - [on-policy](https://github.com/marlbenchmark/on-policy) - 💌 Learn the author implementation of MAPPO.
