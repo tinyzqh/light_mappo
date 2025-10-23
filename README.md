@@ -8,6 +8,14 @@ This is a translated English version. Please click [here](README_CN.md) for the 
 This code has been used in the following paper:
 
 ```bash
+@inproceedings{he2024intelligent,
+  title={Intelligent Decentralized Multiple Access via Multi-Agent Deep Reinforcement Learning},
+  author={He, Yuxuan and Gang, Xinyuan and Gao, Yayu},
+  booktitle={2024 IEEE Wireless Communications and Networking Conference (WCNC)},
+  pages={1--6},
+  year={2024},
+  organization={IEEE}
+}
 @article{qiu2024enhancing,
   title={Enhancing UAV Communications in Disasters: Integrating ESFM and MAPPO for Superior Performance},
   author={Qiu, Wen and Shao, Xun and Loke, Seng W and He, Zhiqiang and Alqahtani, Fayez and Masui, Hiroshi},
